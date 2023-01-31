@@ -1,8 +1,12 @@
 //For authentication purposes only
-const express = require('express')
+const express = require('express');
 const router = express.Router();
 const User = require('../../models/Users');
-const bcrypt = require('bcryptjs')
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
+const keys = require('../../config/keys')
+
 
 // @route   GET api/users/test
 // @desc    Tests users route
@@ -47,22 +51,21 @@ router.post('/login' , (req,res) => {
   .then((user) => {
     if(!user){
       return res.status(404).json({email: "User doesn't Exist"});
-    } else {
+    } 
+    else {
       bcrypt.compare(req.body.password, user.password)
         .then(isMatch => {
           if(isMatch) {
-            res.json({msg: "Successfully logged in"});
+            const payload = { userId: user.id, email: user.email }
+            token = jwt.sign(payload, keys.secretOrKey,
+              { expiresIn: "1h" })
+            res.status(201).json({  success: true, data: { userId: user.id, email: user.email, token: 'Bearer ' + token }});
           } else {
             res.status(400).json({password: "Incorrect Password"});
           }
-
         });
-      
-
     }
-
   })
-
 })
 
 
