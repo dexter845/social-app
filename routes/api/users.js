@@ -4,6 +4,7 @@ const router = express.Router();
 const User = require('../../models/Users');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const passport = require('passport');
 
 const keys = require('../../config/keys')
 
@@ -34,7 +35,11 @@ router.post('/register', (req, res)=>{
             if(err) throw err;
             newUser.password = hash;
             newUser.save()
-              .then( user => res.json(user))
+              .then( user => {
+                res.json(user)
+                console.log(`${user.name} registered as a user`)
+                
+              })
               .catch(err => console.error(err))
           })
         })
@@ -60,6 +65,7 @@ router.post('/login' , (req,res) => {
             token = jwt.sign(payload, keys.secretOrKey,
               { expiresIn: "1h" })
             res.status(201).json({  success: true, data: { userId: user.id, email: user.email, token: 'Bearer ' + token }});
+            console.log(`${user.name} Logged In`)
           } else {
             res.status(400).json({password: "Incorrect Password"});
           }
@@ -68,6 +74,15 @@ router.post('/login' , (req,res) => {
   })
 })
 
+
+
+// @route   GET api/users/current
+// @desc    Return The Current User
+// @access  Private
+
+router.get('/current', passport.authenticate('jwt', {session: false}), (req,res)=>{
+  res.json(req.user);
+})
 
 
 
